@@ -1,0 +1,161 @@
+buildscript {
+    ext {
+        springBootVersion = '2.3.4.RELEASE'
+    }
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        jcenter()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:$springBootVersion")
+    }
+}
+apply plugin: 'org.springframework.boot'
+springBoot {
+    mainClass = "com.example.Main"
+}
+
+//plugins {
+//    id 'org.springframework.boot' version '2.3.4.RELEASE'
+//    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+//    id 'java'
+//    id 'org.springframework.boot.experimental.thin-launcher' version '1.0.25.RELEASE'
+//
+//
+//
+//}
+
+ext {
+    set('springCloudVersion', "Hoxton.SR8")
+}
+
+//bootRepackage {
+//    classifier = 'exec'
+//}
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+    }
+}
+
+group 'merge.plus'
+archivesBaseName="merge-plus"
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = '8'
+
+repositories {
+    mavenLocal() // 使用本地仓库
+    mavenCentral()
+}
+
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'org.springframework.boot.experimental.thin-launcher'
+//apply plugin: 'nebula.optional-base'
+//apply plugin: 'optional-base'
+//apply plugin: "com.jfrog.bintray"
+//apply plugin: "com.jfrog.artifactory"
+
+
+
+
+// 指定上传的路径
+def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+
+// 上传Task，Gradle会生成并上传pom.xml文件。
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: localMavenRepo)
+
+            //构造项目的Pom文件
+            pom.project {
+                name = project.name
+                packaging = 'jar'
+                description = 'merge-plus'
+            }
+        }
+
+    }
+}
+
+//上传到nexus
+//uploadArchives {
+//    repositories {
+//        mavenDeployer {
+//            repository(url: "${mavenThirdparty}") {
+//                authentication(userName: "${mavenThirdpartyUserName}", password: "${mavenThirdpartyPwd}")
+//            }
+//            snapshotRepository(url: "${mavenSnapshot}") {
+//                authentication(userName: "${mavenSnapshotUserName}", password: "${mavenSnapshotPwd}")
+//            }
+//            println "$version"
+//            pom.version = "$version"
+//            pom.artifactId = "$archivesBaseName"
+//            pom.groupId = "$project.group"
+//        }
+//    }
+//}
+
+
+
+//skip Test tasks
+//gradle.taskGraph.whenReady {
+//    tasks.each { task ->
+//        if (task.name.contains("test"))
+//        {
+//            task.enabled = false
+//        }
+//    }
+//}
+
+
+
+dependencies {
+    implementation 'org.springframework.boot:spring-boot-starter'
+    compile 'com.alibaba:fastjson:1.2.73'
+
+    compile 'org.springframework.boot:spring-boot-starter-aop'
+    compile 'org.projectlombok:lombok:1.18.12'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-redis'
+
+
+
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+
+    compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+//
+//jar {
+//    from {
+//        configurations.compile.collect {
+//            it.isDirectory() ? it : zipTree(it)
+//        }
+//    }
+////    manifest {
+////        attributes("Main-Class": "")
+////    }
+//    exclude 'META-INF/*.RSA', 'META-INF/*.SF','META-INF/*.DSA'
+//}

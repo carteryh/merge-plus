@@ -1,0 +1,112 @@
+buildscript {
+    ext {
+        set('springBootVersion', "2.3.4.RELEASE")
+        set('springCloudVersion', "Hoxton.SR8")
+    }
+
+    repositories {
+        mavenLocal()
+        //私服地址
+        maven { url "http://xxx/nexus/content/groups/public/" }
+
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://oss.sonatype.org/content/groups/public/" }
+        maven { url "https://repo.spring.io/libs-milestone/" }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+    }
+}
+
+plugins {
+    id 'org.springframework.boot' version '2.3.4.RELEASE'
+    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
+}
+
+apply plugin: 'java'
+apply plugin: 'idea'
+apply plugin: 'eclipse'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'org.springframework.boot'
+apply plugin: 'io.spring.dependency-management'
+
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom  org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
+    }
+}
+
+
+group 'merge.plus'
+archivesBaseName="merge-plus"
+version '1.0-SNAPSHOT'
+
+sourceCompatibility = '8'
+
+repositories {
+    mavenLocal() // 使用本地仓库
+    mavenCentral()
+}
+
+// 指定上传的路径
+def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
+
+// 上传Task，Gradle会生成并上传pom.xml文件。
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            repository(url: localMavenRepo)
+            //私服地址
+            repository(url: "http://xxx/nexus/content/groups/public/") {
+                authentication(userName: "xxx", password: "xxx")
+            }
+            //私服地址
+            snapshotRepository(url: "xxx/nexus/content/repositories/snapshots/") {
+                authentication(userName: "xxx", password: "xxx")
+            }
+
+            //构造项目的Pom文件
+            pom.project {
+                name = project.name
+                packaging = 'jar'
+                description = 'merge-plus'
+            }
+        }
+
+    }
+}
+
+dependencies {
+    compile 'org.springframework.boot:spring-boot-starter'
+    compile 'com.alibaba:fastjson:1.2.73'
+
+    compile 'org.springframework.boot:spring-boot-starter-aop'
+    compile 'org.projectlombok:lombok:1.18.12'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
+    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+
+    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+
+    compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
+
+    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+
+    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
+}
+
+test {
+    useJUnitPlatform()
+}
+
+jar {
+    enabled = true
+}

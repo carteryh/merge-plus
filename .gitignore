@@ -1,0 +1,36 @@
+merge-plus/target/
+merge-plus/!.mvn/wrapper/maven-wrapper.jar
+
+target/
+merge-plus/$/
+# src/test/
+# !src/test/*Test.java
+merge-plus/src/main/resources/rebel.xml
+
+### STS ###
+merge-plus/.apt_generated
+merge-plus/.classpath
+merge-plus/.factorypath
+merge-plus/.project
+merge-plus/.settings
+merge-plus/.springBeans
+
+### IntelliJ IDEA ###
+merge-plus/.idea
+merge-plus/*.iws
+merge-plus/*.iml
+merge-plus/*.ipr
+
+### NetBeans ###
+merge-plus/nbproject/private/
+merge-plus/build/
+merge-plus/nbbuild/
+merge-plus/dist/
+merge-plus/nbdist/
+merge-plus/.nb-gradle/
+
+### gradle  ###
+merge-plus/.gradle
+merge-plus/build
+merge-plus/gradle
+merge-plus/build-test.gradle
