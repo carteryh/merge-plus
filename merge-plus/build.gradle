@@ -41,7 +41,7 @@ dependencyManagement {
 }
 
 
-group 'merge.plus'
+group 'com.merge.plus'
 archivesBaseName="merge-plus"
 version '1.0-SNAPSHOT'
 
