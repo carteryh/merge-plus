@@ -6,7 +6,6 @@ buildscript {
 
     repositories {
         mavenLocal()
-        //私服地址
         maven { url "http://xxx/nexus/content/groups/public/" }
 
         maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
@@ -16,6 +15,7 @@ buildscript {
         mavenCentral()
     }
     dependencies {
+
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
@@ -32,6 +32,12 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
+//apply plugin: 'org.springframework.boot.experimental.thin-launcher'
+//apply plugin: 'nebula.optional-base'
+//apply plugin: 'optional-base'
+//apply plugin: "com.jfrog.bintray"
+//apply plugin: "com.jfrog.artifactory"
+
 
 dependencyManagement {
     imports {
@@ -52,6 +58,11 @@ repositories {
     mavenCentral()
 }
 
+
+
+
+
+
 // 指定上传的路径
 def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
 
@@ -60,12 +71,10 @@ uploadArchives {
     repositories {
         mavenDeployer {
             repository(url: localMavenRepo)
-            //私服地址
             repository(url: "http://xxx/nexus/content/groups/public/") {
                 authentication(userName: "xxx", password: "xxx")
             }
-            //私服地址
-            snapshotRepository(url: "xxx/nexus/content/repositories/snapshots/") {
+            snapshotRepository(url: "http://xxx/nexus/content/repositories/snapshots/") {
                 authentication(userName: "xxx", password: "xxx")
             }
 
@@ -89,12 +98,14 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-redis'
+
+
 
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
 
     compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
-    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
 
     testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
 
@@ -105,6 +116,14 @@ dependencies {
 
 test {
     useJUnitPlatform()
+}
+
+jar {
+    enabled = true
+}
+
+bootJar {
+    enabled = false
 }
 
 jar {
