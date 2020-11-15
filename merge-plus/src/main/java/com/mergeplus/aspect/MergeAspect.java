@@ -33,10 +33,8 @@ public class MergeAspect {
 
     @Around("methodPointcut()&&args(obj)")
     public Object interceptor(ProceedingJoinPoint pjp, Object obj) throws Throwable {
-        System.out.println("******************************");
         mergeCore.mergeData(obj);
-        pjp.proceed();
-        return "null";
+        return pjp.proceed();
     }
 
 }

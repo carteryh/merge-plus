@@ -2,23 +2,24 @@ package com.mergeplus.handler;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.mergeplus.annonation.MergeField;
-import com.mergeplus.cache.MergeCache;
+import com.mergeplus.cache.Cache;
+import com.mergeplus.cache.MergeCacheManager;
+import com.mergeplus.constant.Constants;
+import com.mergeplus.entity.FieldInfo;
+import com.mergeplus.entity.MergeInfo;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.BeanUtils;
+import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.context.ApplicationContext;
+import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.stereotype.Component;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.client.RestTemplate;
 
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
@@ -33,84 +34,111 @@ import java.util.stream.Collectors;
 @Slf4j
 public class ObjectHandler extends AbstractHandler {
 
-    public final static Map<String, List<MergeCache>> cacheMap = new ConcurrentHashMap();
-
-    @Autowired
-    private ApplicationContext applicationContext;
-
     @Autowired
     private RedisTemplate redisTemplate;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     private static final ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
     public void doHandler(Object obj) {
         Class<?> clazz = obj.getClass();
-        String name = clazz.getName();
-        List<MergeCache> caches = cacheMap.get(name);
-        List<MergeCache> mergeCaches = new ArrayList<>();
-        if (caches == null) {
-            Field[] fields = clazz.getDeclaredFields();
-            for (Field field: fields) {
-                MergeField mergeField = field.getAnnotation(MergeField.class);
-                if (mergeField == null) {
-                    continue;
-                }
-                MergeCache mergeCache = new MergeCache();
-//                mergeCache.setMergeBeanClazz(clazz);
+        String className = clazz.getName();
+        Cache cache = MergeCacheManager.getInstance();
+        MergeInfo mergeInfo = (MergeInfo)cache.get(className);
 
-                Class<?> feignClass = mergeField.feign();
-                try {
-                    Method method = feignClass.getDeclaredMethod(mergeField.method(), mergeField.key().getClass());
-                    mergeCache.setMethod(method);
-                } catch (Exception e) {
-                    log.info("new feignBean error: {}", e);
-                }
-
-                if (mergeField.feign() != null) {
-                    mergeCache.setFeignBeanClazz(mergeField.feign());
-                    mergeCache.setFeignBean(applicationContext != null ? applicationContext.getBean(mergeField.feign()) : null);
-                }
-                mergeCache.setArgs(mergeField.key());
-                mergeCache.setCacheKey(mergeField.cache());
-                mergeCache.setSourceKey(mergeField.sourceKey());
-                mergeCache.setTargetKey(field.getName());
-                mergeCaches.add(mergeCache);
-            }
-        }
-
-        if (mergeCaches.isEmpty()) {
+        if (mergeInfo == null) {
             return;
         }
-        cacheMap.put(name, mergeCaches);
 
         Map<Object, Object> result = new HashMap<>();
-        List<MergeCache> merges = new ArrayList<>();
+        List<FieldInfo> merges = new ArrayList<>();
         JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(obj));
-        for (MergeCache mergeCache: caches) {
-            Map<Object, Object> value = (Map)redisTemplate.opsForValue().get(mergeCache.getCacheKey());
-            if (value != null) {
-                Map<Object, Object> map = value.entrySet().stream().collect(Collectors.toMap(Map.Entry::getValue, Map.Entry::getKey));
-                result.put(mergeCache.getTargetKey(), map.get(jsonObject.get(mergeCache.getSourceKey())));
+        for (FieldInfo fieldInfo: mergeInfo.getFieldList()) {
+            if (fieldInfo.getCacheKey() == null || fieldInfo.getCacheKey().trim().length() == 0) {
+                merges.add(fieldInfo);
                 continue;
             }
-            merges.add(mergeCache);
+            Object value = redisTemplate.opsForValue().get(fieldInfo.getCacheKey());
+            if (value == null || !(value instanceof Map)) {
+                merges.add(fieldInfo);
+                continue;
+            }
+
+            //cacheObject
+            Map map = (Map) value;
+            Object o = null;
+            if (map.containsKey(Constants.AUTO_LOAD_CACHE_KEY)) {
+                o = map.get(Constants.AUTO_LOAD_CACHE_KEY);
+            }
+
+            if (o != null && o instanceof Map) {
+                map = (Map)o;
+            }
+
+            Object v = map.get(jsonObject.get(fieldInfo.getSourceKey()));
+            if (v == null) {
+                merges.add(fieldInfo);
+                continue;
+            }
+            result.put(fieldInfo.getTargetKey(), v);
         }
 
         merges.stream().map(e -> CompletableFuture.supplyAsync(() -> {
+            Map<Object, Object> returnMap = null;
             try {
-                e.getMethod().invoke(e.getFeignBean(), e.getArgs());
-                Object value = redisTemplate.opsForValue().get(e.getCacheKey());
-//                if (value != null && value.length() > 0) {
-//                    result.put(e.getTargetKey(), value);
-//                }
+                if (e.getClientBean() != null) {
+                    Object returnValue = e.getMethod().invoke(e.getClientBean(), e.getKey());
+                    returnMap = (Map) returnValue;
+                    if (returnValue != null && returnValue instanceof Map) {
+                        returnMap = (Map) returnValue;
+                    }
+
+                    if (returnMap == null && returnMap.isEmpty()) {
+                        return e;
+                    }
+
+                    result.put(e.getTargetKey(), returnMap.get(jsonObject.get(e.getSourceKey())));
+                } else {
+                    if (e.getUrl() == null || e.getUrl().trim().length() == 0) {
+                        return e;
+                    }
+
+                    ResponseEntity<Object> exchange = restTemplate.exchange(e.getUrl(), e.getHttpMethod(), null, Object.class);
+                    if (exchange == null) {
+                        return e;
+                    }
+
+                    Object body = exchange.getBody();
+                    if (body == null) {
+                        return e;
+                    }
+
+                    if (body instanceof Map) {
+                        returnMap = (Map) body;
+                        if (returnMap == null && returnMap.isEmpty()) {
+                            return e;
+                        }
+                        result.put(e.getTargetKey(), returnMap.get(jsonObject.get(e.getSourceKey())));
+                    }
+                }
             } catch (Exception ex) {
-                log.error(" fieldName={}, error: {}", e, ex);
+                log.error("class: {}, methodName={}, error: {}", e.getClientBeanClazz(), e.getMethod().getName(), ex);
             }
             return e;
         }, executor)).collect(Collectors.toList()).stream().map(CompletableFuture::join).collect(Collectors.toList());
 
-        BeanUtils.copyProperties(result, obj);
+        if (result == null || result.isEmpty()) {
+            return;
+        }
+
+        try {
+            BeanUtils.copyProperties(obj, result);
+        } catch (Exception e) {
+            log.error("copyProperties error: {}",  e);
+        }
     }
 
 }

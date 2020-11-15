@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 
 /**
  * 项目名称：merge-plus
@@ -14,19 +13,9 @@ import java.lang.reflect.Method;
  * 创 建 人：chenyouhong
  */
 @Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
-public @interface MergeField {
+@Target({ElementType.METHOD, ElementType.TYPE})
+public @interface HttpMerge {
 
-    String key() default "";
-
-    Class<? extends Object> client() default Object.class;
-
-    String sourceKey() default "";
-
-    String method() default "";
-
-    boolean isMerge() default false;
-
-    String cache() default "";
+    String url() default "";
 
 }

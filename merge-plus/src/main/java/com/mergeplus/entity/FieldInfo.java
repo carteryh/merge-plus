@@ -1,6 +1,7 @@
-package com.mergeplus.cache;
+package com.mergeplus.entity;
 
 import lombok.Data;
+import org.springframework.http.HttpMethod;
 
 import java.lang.reflect.Method;
 
@@ -12,22 +13,24 @@ import java.lang.reflect.Method;
  * 创 建 人：chenyouhong
  */
 @Data
-public class MergeCache {
+public class FieldInfo {
 
-    private Class<? extends Object> mergeBeanClazz;
+    private Class<? extends Object> clientBeanClazz;
 
-    private Class<? extends Object> feignBeanClazz;
-
-    private Object feignBean;
+    private Object clientBean;
 
     private Method method;
 
-    private Object args;
+    private HttpMethod httpMethod;
+
+    private String key;
 
     private String sourceKey;
 
     private String targetKey;
 
     private String cacheKey;
+
+    private String url;
 
 }
