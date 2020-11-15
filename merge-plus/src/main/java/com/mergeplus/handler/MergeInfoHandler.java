@@ -96,52 +96,53 @@ public class MergeInfoHandler extends AbstractHandler {
                 fieldInfo.setClientBeanClazz(mergeField.client());
                 fieldInfo.setClientBean(applicationContext != null && applicationContext.containsBean(mergeField.client().getName()) ? applicationContext.getBean(mergeField.client()) : null);
 
-                if (fieldInfo.getCacheKey() == null || fieldInfo.getCacheKey().trim().length() > 0) {
-                    String cacheKey = null;
-                    FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
-                    if (feignClient != null) {
-                        String name = feignClient.name();
+                String cacheKey = mergeField.cache();
+                FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
+                if (feignClient != null) {
+                    String name = feignClient.name();
+                    if (cacheKey == null || Constants.BLANK.equals(cacheKey)) {
                         cacheKey = name + COLON + fieldInfo.getKey();
-                        fieldInfo.setCacheKey(cacheKey);
-                    } else {
-                        String url = Constants.BLANK;
-                        Annotation[] methodAnnotations = method.getAnnotations();
-                        RequestMergeMapping requestMapping = null;
-                        for (Annotation annotation : methodAnnotations) {
-                            Type[] genericInterfaces = annotation.getClass().getGenericInterfaces();
-                            for (Type type : genericInterfaces) {
-                                requestMapping = (RequestMergeMapping) ((Class) type).getAnnotation(RequestMergeMapping.class);
-                                if (requestMapping == null) {
-                                    continue;
-                                }
-                                HttpMethod[] httpMethods = requestMapping.method();
-                                if (httpMethods != null && httpMethods.length != 0) {
-                                    fieldInfo.setHttpMethod(httpMethods[0]);
-                                    AbstractRequest abstractRequest = AbstractRequest.requestMap.get(httpMethods[0]);
-                                    if (abstractRequest != null) {
-                                        url = abstractRequest.parseRquest(fieldInfo);
-                                    }
-                                }
-                            }
-                        }
-
-                        Assert.notNull(requestMapping, "request method don't is null!");
-                        Assert.notNull(url, "request url don't is null!");
-
-                        Annotation[][] parameterAnnotations = method.getParameterAnnotations();
-                        for (Annotation[] annotations : parameterAnnotations) {
-                            for (Annotation annotation : annotations) {
-                                if (annotation instanceof PathVariable) {
-                                    PathVariable pathVariable = (PathVariable) annotation;
-                                    String name = pathVariable.name();
-                                    url = url.replaceAll(Constants.REPLACE_BRACE_CONTENT_REGEX, fieldInfo.getKey());
-                                }
-                            }
-                        }
-
-                        fieldInfo.setUrl(url);
                     }
+                    fieldInfo.setCacheKey(cacheKey);
+                } else {
+                    String url = Constants.BLANK;
+                    Annotation[] methodAnnotations = method.getAnnotations();
+                    RequestMergeMapping requestMapping = null;
+                    for (Annotation annotation : methodAnnotations) {
+                        Type[] genericInterfaces = annotation.getClass().getGenericInterfaces();
+                        for (Type type : genericInterfaces) {
+                            requestMapping = (RequestMergeMapping) ((Class) type).getAnnotation(RequestMergeMapping.class);
+                            if (requestMapping == null) {
+                                continue;
+                            }
+                            HttpMethod[] httpMethods = requestMapping.method();
+                            if (httpMethods != null && httpMethods.length != 0) {
+                                fieldInfo.setHttpMethod(httpMethods[0]);
+                                AbstractRequest abstractRequest = AbstractRequest.requestMap.get(httpMethods[0]);
+                                if (abstractRequest != null) {
+                                    url = abstractRequest.parseRquest(fieldInfo);
+                                }
+                            }
+                        }
+                    }
+
+                    Assert.notNull(requestMapping, "request method don't is null!");
+                    Assert.notNull(url, "request url don't is null!");
+
+                    Annotation[][] parameterAnnotations = method.getParameterAnnotations();
+                    for (Annotation[] annotations : parameterAnnotations) {
+                        for (Annotation annotation : annotations) {
+                            if (annotation instanceof PathVariable) {
+                                PathVariable pathVariable = (PathVariable) annotation;
+                                String name = pathVariable.name();
+                                url = url.replaceAll(Constants.REPLACE_BRACE_CONTENT_REGEX, fieldInfo.getKey());
+                            }
+                        }
+                    }
+
+                    fieldInfo.setUrl(url);
                 }
+                fieldInfo.setCacheKey(cacheKey);
                 fieldList.add(fieldInfo);
             }
             mergeInfo.setFieldList(fieldList);

@@ -15,7 +15,6 @@ buildscript {
         mavenCentral()
     }
     dependencies {
-
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
 }
@@ -32,12 +31,6 @@ apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
-//apply plugin: 'org.springframework.boot.experimental.thin-launcher'
-//apply plugin: 'nebula.optional-base'
-//apply plugin: 'optional-base'
-//apply plugin: "com.jfrog.bintray"
-//apply plugin: "com.jfrog.artifactory"
-
 
 dependencyManagement {
     imports {
@@ -45,7 +38,6 @@ dependencyManagement {
         mavenBom  org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
     }
 }
-
 
 group 'com.merge.plus'
 archivesBaseName="merge-plus"
@@ -59,9 +51,10 @@ repositories {
 }
 
 
-
-
-
+task sourceJar (type:Jar) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
 
 // 指定上传的路径
 def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
@@ -98,14 +91,12 @@ dependencies {
     implementation 'org.springframework.boot:spring-boot-starter-web'
     compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
     compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
-//    compile group: 'org.springframework.boot', name: 'spring-boot-starter-redis'
-
-
 
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
 
     compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
 
     testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
 

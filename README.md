@@ -25,7 +25,169 @@
 
 ## 三、merge-plus使用
 
-​		项目基于gradle打包，版本6.7。打包本地maven仓库或私服，引入相应jar包即可。
+1、项目基于gradle打包，版本6.7。打包本地maven仓库或私服，引入相应jar包即可。
 
-​			
+​		compile 'com.merge.plus:merge-plus:1.0-SNAPSHOT'	
+
+2、若需要使用redis缓存，特别注意redis序列化
+
+3、merge方式
+
+​	a、feign merge
+
+​	feign merge有2种情况，同一个注册中心，url可空。
+
+​	@FeignClient(name = "user-center")
+
+​	当不在同一个注册中心时，需要指定直连url，该方式和http方式类似
+
+​	@FeignClient(name = "user-center", url = "http://localhost:9002")
+
+```java
+package com.cloud.user;
+
+import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.Map;
+
+// 不在同一个注册中心时，需要指定直连url
+@FeignClient(name = "user-center", url = "http://localhost:9002")
+public interface StaticFeignClient {
+ 
+	  @GetMapping("/user/dic/merge/{typeCode}")
+    Map<String, String> merge(@PathVariable(name = "typeCode", required = true) String typeCode);
+
+}
+```
+
+​	b、http merge
+
+​	http merge主要是为了解决项目中不使用feign而提供的，和feign的直连merge一样。因此必然需要指定远程调用地址。
+
+```java
+package com.cloud.user;
+
+import com.mergeplus.annonation.GetMerge;
+import com.mergeplus.annonation.HttpMerge;
+import org.springframework.web.bind.annotation.PathVariable;
+
+import java.util.Map;
+
+// 需要指定url地址
+@HttpMerge(url = "http://localhost:9002")
+public interface StaticHttpClient {
+ 
+	  @GetMerge(value = "/user/dic/merge/{typeCode}")
+    Map<String, String> merge(@PathVariable(name = "typeCode", required = true) String typeCode);
+    
+}
+```
+
+4、远程调用响应数据规范
+
+​	  因为支持redis缓存，所以建议使用，提高效率，因为大多数情况下，字典肯定不会经常变更。建议字典缓存使用autoload-cache，autoload-cache相关使用此处不做介绍，相关文档地址：https://github.com/qiujiayu/AutoLoadCache
+
+字典接口响应规范案例：
+
+```java
+    @GetMapping("/dic/merge/{typeCode}")
+    @Cache(expire = 3600, key = "#args[0]")
+    public Map<String, String> merge(@PathVariable(name = "typeCode", required = true) String typeCode) {
+        Map<String, String> map = Maps.newHashMap();
+        map.put("a", "A");
+        map.put("b","B");
+        map.put("c", "C");
+        map.put("d","D");
+
+        return map;
+    }
+```
+
+响应结果规范：
+
+```json
+{
+  "a": "A",
+  "b": "B",
+  "c": "C",
+  "d": "D"
+}
+```
+
+5、在需要merge的对象字段上加上相应的注解
+
+```java
+package com.cloud.user;
+
+import com.mergeplus.annonation.MergeField;
+import lombok.Data;
+
+import java.io.Serializable;
+
+@Data
+public class Business implements Serializable {
+
+    private static final long serialVersionUID = 1L;
+
+    private String value;
+
+  	//http merge, cache非必须
+    @MergeField(key = "test", sourceKey = "value", client = StaticHttpClient.class, method = "merge", cache = "user-center:test")
+    private String valueName;
+
+    //feign merge, cache非必须,但是当cache为空时，实际cache的key为StaticFeignClient的应用名拼接冒号，再拼接上注解(@MergeField)中key
+  	// @FeignClient(name = "user-center", url = "http://localhost:9002")
+		// public interface StaticFeignClient
+  	// cache为 user-center:test(应用名拼接冒号，再拼接上key)
+    @MergeField(key = "test", sourceKey = "value", client = StaticFeignClient.class, method = "merge")
+    private String valueName2;
+
+  	//feign merge, cache非必须
+    @MergeField(key = "test", sourceKey = "value", client = StaticFeignClient.class, method = "merge", cache = "user-center:test")
+    private String valueName3;
+
+}
+```
+
+6、merge调用
+
+​	先注入核心merge Bean，然后调用即可，方法支持单个对象merge，也支持List merge。
+
+```java
+	//核心merge Bean注入    
+	@Autowired
+  private MergeCore mergeCore;
+
+  @Test
+  public void test2() throws Exception {
+    List<Object> objects = new ArrayList<>();
+
+    Business business =  new Business();
+    business.setValue("a");
+    business.setValue2("c");
+    business.setValue3("d");
+    objects.add(business);
+
+    Business business2 =  new Business();
+    business2.setValue("c");
+    business2.setValue2("b");
+    business2.setValue3("x");
+    objects.add(business2);
+
+    mergeCore.mergeResult(objects);
+    System.out.println(objects);
+  }
+```
+
+7、merge结果
+
+```java
+[Business(value=a, valueName=A, value2=c, valueName2=C, value3=d, valueName3=D), Business(value=c, valueName=C, value2=b, valueName2=B, value3=x, valueName3=null)]
+```
+
+## 四、联系方式
+
+若有其他建议和bug提出、加新功能、遇到问题项目相关问题等，请联系qq号: 824291336
 
