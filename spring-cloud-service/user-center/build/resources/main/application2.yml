@@ -1,0 +1,63 @@
+#server:
+#  port: 9002
+#spring:
+#  profiles:
+#    active: dev
+#  application:
+#    name: user-center
+##  redis:
+##    host: redis.test.lianzhongjr.net
+##    port: 6379
+##    password: 79mFpdn0gR
+##    lettuce:
+##      pool:
+##        max-active: 8
+##        max-idle: 8
+##        min-idle: 0
+#  datasource:
+##    driver-class-name: com.mysql.jdbc.Driver
+##    url: jdbc:mysql://localhost:3306/changgou_oauth?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#    driver-class-name: com.mysql.cj.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/changgou_oauth?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+#    username: root
+#    password: 12345678
+##    hikari:
+##      connection-timeout: 30000
+##      auto-commit: true
+##      max-lifetime: 1800000
+##      pool-name: DatebookHikariCP
+##      minimum-idle: 10
+##      connection-test-query: SELECT 1
+##      idle-timeout: 600000
+##      maximum-pool-size: 20
+##  main:
+##    allow-bean-definition-overriding: true
+##  cloud:
+##    nacos:
+##      discovery:
+##        server-addr: 127.0.0.1:8848
+##        namespace: ccc40fcb-625e-454e-93b6-3b1505df1d15
+##      config:
+##        # 配置中心地址
+##        server-addr: 127.0.0.1:8848
+##        # 配置文件格式
+##        file-extension: yml
+#  #      prefix: user-center
+#        # 服务命名空间
+##        namespace: ccc40fcb-625e-454e-93b6-3b1505df1d15
+#
+#
+#
+#
+##eureka:
+##  instance:
+##    prefer-ip-address: true
+##  client:
+##    service-url:
+##      defaultZone: http://192.168.2.38:8761/eureka
+#
+##logging:
+##  level:
+##    org:
+##      springframework: debug
+#

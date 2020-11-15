@@ -1,0 +1,17 @@
+mainClassName = 'com.cloud.OauthApplication'
+springBoot {
+    mainClassName = 'com.cloud.OauthApplication'
+    buildInfo {
+        properties {
+            artifact = 'oauth-center'
+            version = '1.0.0'
+            group = 'com.cloud'
+            name = 'oauth-center'
+        }
+    }
+}
+
+dependencies {
+
+}
+

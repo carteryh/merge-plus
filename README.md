@@ -187,7 +187,19 @@ public class Business implements Serializable {
 [Business(value=a, valueName=A, value2=c, valueName2=C, value3=d, valueName3=D), Business(value=c, valueName=C, value2=b, valueName2=B, value3=x, valueName3=null)]
 ```
 
-## 四、联系方式
+
+
+## 四、详细使用
+
+​		详细使用见demo中spring-cloud-service项目user-center中测试类TestClass。
+
+## 五、注意事项
+
+​		使用缓存时，需要注入redis序列化及AutoLoadCache序列化，可参考spring-cloud-service项目中RedisConfiguration及AutoLoadCacheConfig配置。
+
+
+
+## 六、联系方式
 
 若有其他建议和bug提出、加新功能、遇到问题项目相关问题等，请联系qq号: 824291336
 

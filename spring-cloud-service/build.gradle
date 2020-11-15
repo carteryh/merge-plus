@@ -1,0 +1,82 @@
+buildscript {
+    ext {
+        springBootVersion = '2.3.1.RELEASE'
+        springCloudVersion = 'Hoxton.SR6'
+        springBootManagementVersion = '1.0.8.RELEASE'
+    }
+    repositories {
+        mavenLocal()
+        maven { url "http://nexus.lzops.com/nexus/content/groups/public/" }
+
+        maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://oss.sonatype.org/content/groups/public/" }
+        maven { url "https://repo.spring.io/libs-milestone/" }
+        jcenter()
+        mavenCentral()
+    }
+    dependencies {
+        classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
+        classpath("io.spring.gradle:dependency-management-plugin:${springBootManagementVersion}")
+    }
+}
+
+allprojects {
+    group "com.cloud"
+    version "1.0.0"
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'application'
+    apply plugin: 'idea'
+    apply plugin: 'eclipse'
+    apply plugin: 'war'
+    apply plugin: 'org.springframework.boot'
+    apply plugin: 'io.spring.dependency-management'
+    sourceCompatibility = JavaVersion.VERSION_1_8
+    targetCompatibility = JavaVersion.VERSION_1_8
+    jar {
+        enabled = true
+    }
+    repositories {
+        mavenLocal()
+        maven { url 'http://maven.aliyun.com/nexus/content/groups/public/' }
+        mavenCentral()
+        maven { url 'https://repo.spring.io/snapshot' }
+        maven { url 'https://repo.spring.io/milestone' }
+    }
+    dependencies {
+        compile(
+                'org.springframework.boot:spring-boot-starter-webflux',
+                'org.springframework.boot:spring-boot-starter-web',
+
+                'org.springframework.cloud:spring-cloud-starter-oauth2',
+                'org.springframework.cloud:spring-cloud-starter-security',
+                'org.springframework.cloud:spring-cloud-starter',
+                'com.google.guava:guava:23.0',
+                'com.alibaba:fastjson:1.2.73',
+
+                'cn.hutool:hutool-all:5.3.10',
+                'org.springframework.boot:spring-boot-starter-aop',
+        )
+
+        compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+        annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+
+        testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+
+        testImplementation('org.springframework.boot:spring-boot-starter-test') {
+            exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+        }
+
+        testCompileOnly 'org.projectlombok:lombok:1.18.16'
+        testAnnotationProcessor 'org.projectlombok:lombok:1.18.16'
+    }
+    dependencyManagement {
+        imports { mavenBom("org.springframework.boot:spring-boot-dependencies:${springBootVersion}") }
+        imports { mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}" }
+    }
+
+}
+
+

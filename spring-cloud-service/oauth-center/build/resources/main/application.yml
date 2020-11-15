@@ -1,0 +1,62 @@
+server:
+  port: 9001
+spring:
+  application:
+    name: user-auth
+  redis:
+    host: redis.test.lianzhongjr.net
+    port: 6379
+    password: 79mFpdn0gR
+    lettuce:
+      pool:
+        max-active: 8
+        max-idle: 8
+        min-idle: 0
+  datasource:
+#    driver-class-name: com.mysql.jdbc.Driver
+#    url: jdbc:mysql://localhost:3306/changgou_oauth?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/changgou_oauth?useUnicode=true&characterEncoding=utf-8&useSSL=false&allowMultiQueries=true&allowPublicKeyRetrieval=true&serverTimezone=UTC
+    username: root
+    password: 12345678
+#    hikari:
+#      connection-timeout: 30000
+#      auto-commit: true
+#      max-lifetime: 1800000
+#      pool-name: DatebookHikariCP
+#      minimum-idle: 10
+#      connection-test-query: SELECT 1
+#      idle-timeout: 600000
+#      maximum-pool-size: 20
+  main:
+    allow-bean-definition-overriding: true
+  thymeleaf:
+    cache: false
+#eureka:
+#  instance:
+#    prefer-ip-address: true
+#  client:
+#    service-url:
+#      defaultZone: http://192.168.2.38:8761/eureka
+auth:
+  ttl: 3600  #token存储到redis的过期时间
+  clientId: changgou
+  clientSecret: changgou
+  cookieDomain: localhost
+  cookieMaxAge: -1
+encrypt:
+  key-store:
+#    location: classpath:/changgou.jks
+#    secret: changgou
+#    alias: changgou
+#    password: changgou
+    location: classpath:/microservice.jks
+    secret: microservice
+    alias: microservice
+    password: microservice
+
+logging:
+  level:
+    org:
+      springframework: debug
+
