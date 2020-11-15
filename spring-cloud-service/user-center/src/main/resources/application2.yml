@@ -6,9 +6,9 @@
 #  application:
 #    name: user-center
 ##  redis:
-##    host: redis.test.lianzhongjr.net
+##    host: xxx
 ##    port: 6379
-##    password: 79mFpdn0gR
+##    password: xxx
 ##    lettuce:
 ##      pool:
 ##        max-active: 8
@@ -54,7 +54,7 @@
 ##    prefer-ip-address: true
 ##  client:
 ##    service-url:
-##      defaultZone: http://192.168.2.38:8761/eureka
+##      defaultZone: http://xxx:8761/eureka
 #
 ##logging:
 ##  level:

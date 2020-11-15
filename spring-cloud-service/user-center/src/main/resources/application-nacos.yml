@@ -4,9 +4,9 @@ spring:
   application:
     name: user-center
   redis:
-    host: redis.test.lianzhongjr.net
+    host: xxx
     port: 6379
-    password: 79mFpdn0gR
+    password: xxx
     lettuce:
       pool:
         max-active: 8

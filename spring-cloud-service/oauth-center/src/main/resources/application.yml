@@ -4,9 +4,9 @@ spring:
   application:
     name: user-auth
   redis:
-    host: redis.test.lianzhongjr.net
+    host: xxx
     port: 6379
-    password: 79mFpdn0gR
+    password: xxx
     lettuce:
       pool:
         max-active: 8
@@ -37,7 +37,7 @@ spring:
 #    prefer-ip-address: true
 #  client:
 #    service-url:
-#      defaultZone: http://192.168.2.38:8761/eureka
+#      defaultZone: http://xxx:8761/eureka
 auth:
   ttl: 3600  #token存储到redis的过期时间
   clientId: changgou
