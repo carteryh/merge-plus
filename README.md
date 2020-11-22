@@ -27,7 +27,9 @@
 
 1、项目基于gradle打包，版本6.7。打包本地maven仓库或私服，引入相应jar包即可。
 
-​		compile 'com.merge.plus:merge-plus:1.0-SNAPSHOT'	
+```
+compile group: 'com.github.carteryh', name: 'merge-plus', version: '1.0.0'
+```
 
 2、若需要使用redis缓存，特别注意redis序列化
 
