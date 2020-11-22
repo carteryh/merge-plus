@@ -162,8 +162,8 @@ publishing {
             url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
             credentials {
                 // 这里就是之前在issues.sonatype.org注册的账号
-                username='chenyouhong'
-                password='&Chen19910823'
+                username='xxx'
+                password='xxx'
             }
         }
     }
