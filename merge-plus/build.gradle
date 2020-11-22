@@ -6,8 +6,6 @@ buildscript {
 
     repositories {
         mavenLocal()
-        maven { url "http://xxx/nexus/content/groups/public/" }
-
         maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
         maven { url "https://oss.sonatype.org/content/groups/public/" }
         maven { url "https://repo.spring.io/libs-milestone/" }
@@ -29,6 +27,7 @@ apply plugin: 'idea'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'signing'
 apply plugin: 'org.springframework.boot'
 apply plugin: 'io.spring.dependency-management'
 
@@ -39,9 +38,9 @@ dependencyManagement {
     }
 }
 
-group 'com.merge.plus'
+group 'com.github.carteryh'
 archivesBaseName="merge-plus"
-version '1.0-SNAPSHOT'
+version '1.0.0'
 
 sourceCompatibility = '8'
 
@@ -50,10 +49,14 @@ repositories {
     mavenCentral()
 }
 
-
-task sourceJar (type:Jar) {
+task sourcesJar(type: Jar) {
+    from sourceSets.main.allJava
     classifier = 'sources'
-    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar) {
+    from javadoc
+    classifier = 'javadoc'
 }
 
 // 指定上传的路径
@@ -64,12 +67,6 @@ uploadArchives {
     repositories {
         mavenDeployer {
             repository(url: localMavenRepo)
-            repository(url: "http://xxx/nexus/content/groups/public/") {
-                authentication(userName: "xxx", password: "xxx")
-            }
-            snapshotRepository(url: "http://xxx/nexus/content/repositories/snapshots/") {
-                authentication(userName: "xxx", password: "xxx")
-            }
 
             //构造项目的Pom文件
             pom.project {
@@ -115,4 +112,70 @@ jar {
 
 bootJar {
     enabled = false
+}
+
+publishing {
+    // 定义发布什么
+    publications {
+        mavenJava(MavenPublication) {
+            // groupId = project.group
+            // artifactId = project.name
+            // version = project.version
+            // groupId,artifactId,version，如果不定义，则会按照以上默认值执行
+            from components.java
+            artifact sourcesJar
+            artifact javadocJar
+            pom {
+                // 构件名称
+                // 区别于artifactId，可以理解为artifactName
+                name = 'merge-plus'
+                // 构件描述
+                description = 'merge-plus is a plus to merge dictionary value'
+                // 构件主页
+                url = 'https://github.com/13162576590/merge-plus'
+                // 许可证名称和地址
+                licenses {
+                    license {
+                        name = 'The Apache License, Version 2.0'
+                        url = 'http://www.apache.org/licenses/LICENSE-2.0.txt'
+                    }
+                }
+                // 开发者信息
+                developers {
+                    developer {
+                        name = 'Carter'
+                        email = '824291336@qq.com'
+                    }
+                }
+                // 版本控制仓库地址
+                scm {
+                    url = 'https://github.com/13162576590/merge-plus'
+                    connection = 'scm:git:git://github.com/13162576590/merge-plus.git'
+                    developerConnection = 'scm:git:ssh://git@github.com:13162576590/merge-plus.git'
+                }
+            }
+        }
+    }
+    // 定义发布到哪里
+    repositories {
+        maven {
+            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
+            credentials {
+                // 这里就是之前在issues.sonatype.org注册的账号
+                username='chenyouhong'
+                password='&Chen19910823'
+            }
+        }
+    }
+}
+
+signing {
+    sign publishing.publications.mavenJava
+}
+
+
+javadoc {
+    // <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    // 防止本地打开中文乱码
+    options.addStringOption("charset", "UTF-8")
 }
