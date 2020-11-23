@@ -25,7 +25,18 @@
 
 ## 三、merge-plus使用
 
-1、项目基于gradle打包，版本6.7。打包本地maven仓库或私服，引入相应jar包即可。
+1、引入相应jar包
+
+ maven
+
+```xml
+<dependency>
+    <groupId>com.github.carteryh</groupId>
+    <artifactId>merge-plus</artifactId>
+    <version>1.0.0</version>
+</dependency>
+```
+ gradle
 
 ```
 compile group: 'com.github.carteryh', name: 'merge-plus', version: '1.0.0'
