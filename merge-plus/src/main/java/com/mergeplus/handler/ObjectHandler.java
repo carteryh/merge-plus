@@ -12,6 +12,9 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.client.RestTemplate;
 
@@ -57,6 +60,21 @@ public class ObjectHandler extends AbstractHandler {
         List<FieldInfo> merges = new ArrayList<>();
         JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(obj));
         for (FieldInfo fieldInfo: mergeInfo.getFieldList()) {
+            if (fieldInfo.getClientBean() != null) {
+                FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
+                String name = feignClient.name();
+                if (fieldInfo.getCacheKey() == null || Constants.BLANK.equals(fieldInfo.getCacheKey())) {
+                    StringBuffer sb = new StringBuffer();
+                    sb.append(name);
+                    sb.append(Constants.COLON);
+                    sb.append(name);
+                    sb.append(Constants.COLON);
+                    sb.append(fieldInfo.getMethod().getName());
+                    sb.append(Constants.COLON);
+                    sb.append(jsonObject.get(fieldInfo.getSourceKey()));
+                    fieldInfo.setCacheKey(sb.toString());
+                }
+            }
             if (fieldInfo.getCacheKey() == null || fieldInfo.getCacheKey().trim().length() == 0) {
                 merges.add(fieldInfo);
                 continue;
@@ -90,13 +108,13 @@ public class ObjectHandler extends AbstractHandler {
             Map<Object, Object> returnMap = null;
             try {
                 if (e.getClientBean() != null) {
-                    Object returnValue = e.getMethod().invoke(e.getClientBean(), e.getKey());
+                    Object returnValue = e.getMethod().invoke(e.getClientBean(), jsonObject.get(e.getSourceKey()));
                     returnMap = (Map) returnValue;
                     if (returnValue != null && returnValue instanceof Map) {
                         returnMap = (Map) returnValue;
                     }
 
-                    if (returnMap == null && returnMap.isEmpty()) {
+                    if (returnMap == null || returnMap.isEmpty()) {
                         return e;
                     }
 
@@ -106,7 +124,19 @@ public class ObjectHandler extends AbstractHandler {
                         return e;
                     }
 
-                    ResponseEntity<Object> exchange = restTemplate.exchange(e.getUrl(), e.getHttpMethod(), null, Object.class);
+                    //设置Http的Header
+                    HttpHeaders headers = new HttpHeaders();
+                    headers.setContentType(MediaType.APPLICATION_JSON);
+
+                    //设置访问参数
+                    HashMap<String, Object> params = new HashMap<>();
+                    if (e.getKey() == null || e.getKey().trim().length() == 0) {
+                        params.put(e.getSourceKey(), jsonObject.get(e.getSourceKey()));
+                    }
+                    //设置访问的Entity
+                    HttpEntity entity = new HttpEntity<>(params, headers);
+
+                    ResponseEntity<Object> exchange = restTemplate.exchange(e.getUrl(), e.getHttpMethod(), entity, Object.class);
                     if (exchange == null) {
                         return e;
                     }
@@ -118,7 +148,7 @@ public class ObjectHandler extends AbstractHandler {
 
                     if (body instanceof Map) {
                         returnMap = (Map) body;
-                        if (returnMap == null && returnMap.isEmpty()) {
+                        if (returnMap == null || returnMap.isEmpty()) {
                             return e;
                         }
                         result.put(e.getTargetKey(), returnMap.get(jsonObject.get(e.getSourceKey())));

@@ -17,14 +17,15 @@ spring:
   profiles:
     active: dev
   application:
-    name: user-center
+    name: config
   cloud:
     nacos:
       discovery:
         server-addr: 127.0.0.1:8848
-    #        namespace: ccc40fcb-625e-454e-93b6-3b1505df1d15
+        namespace: 142e4905-a36a-4d9f-b18b-ed46c9d9a363
       config:
         # 配置中心地址
         server-addr: 127.0.0.1:8848
         # 配置文件格式
         file-extension: yml
+        namespace: 142e4905-a36a-4d9f-b18b-ed46c9d9a363

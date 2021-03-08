@@ -40,7 +40,7 @@ dependencyManagement {
 
 group 'com.github.carteryh'
 archivesBaseName="merge-plus"
-version '1.0.0'
+version '1.0.1'
 
 sourceCompatibility = '8'
 
@@ -80,14 +80,14 @@ uploadArchives {
 }
 
 dependencies {
-    compile 'org.springframework.boot:spring-boot-starter'
-    compile 'com.alibaba:fastjson:1.2.73'
+    compileOnly 'org.springframework.boot:spring-boot-starter'
+    compileOnly 'com.alibaba:fastjson:1.2.73'
 
     compile 'org.springframework.boot:spring-boot-starter-aop'
     compile 'org.projectlombok:lombok:1.18.12'
-    implementation 'org.springframework.boot:spring-boot-starter-web'
-    compile group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
-    compile group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+    compileOnly group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
+    compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
 
     compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
     annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'

@@ -1,5 +1,7 @@
 package com.mergeplus.handler;
 
+import com.alibaba.fastjson.JSON;
+import com.alibaba.fastjson.JSONObject;
 import com.mergeplus.annonation.MergeField;
 import com.mergeplus.annonation.RequestMergeMapping;
 import com.mergeplus.cache.Cache;
@@ -87,7 +89,9 @@ public class MergeInfoHandler extends AbstractHandler {
                 Class<?> clientClass = mergeField.client();
                 Method method = null;
                 try {
-                    method = clientClass.getDeclaredMethod(mergeField.method(), mergeField.key().getClass());
+                    JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(obj));
+                    Class<?> paramClass = jsonObject.get(mergeField.sourceKey()).getClass();
+                    method = clientClass.getDeclaredMethod(mergeField.method(), paramClass);
                     fieldInfo.setMethod(method);
                 } catch (Exception e) {
                     log.info("find method error: {}", e);
@@ -100,10 +104,17 @@ public class MergeInfoHandler extends AbstractHandler {
                 FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
                 if (feignClient != null) {
                     String name = feignClient.name();
-                    if (cacheKey == null || Constants.BLANK.equals(cacheKey)) {
-                        cacheKey = name + COLON + fieldInfo.getKey();
+                    if (fieldInfo.getKey() != null && fieldInfo.getKey().trim().length() > 0) {
+                        StringBuffer sb = new StringBuffer();
+                        sb.append(name);
+                        sb.append(Constants.COLON);
+                        sb.append(name);
+                        sb.append(Constants.COLON);
+                        sb.append(mergeField.method());
+                        sb.append(Constants.COLON);
+                        sb.append(fieldInfo.getKey());
+                        fieldInfo.setCacheKey(cacheKey);
                     }
-                    fieldInfo.setCacheKey(cacheKey);
                 } else {
                     String url = Constants.BLANK;
                     Annotation[] methodAnnotations = method.getAnnotations();
@@ -141,8 +152,9 @@ public class MergeInfoHandler extends AbstractHandler {
                     }
 
                     fieldInfo.setUrl(url);
+                    fieldInfo.setCacheKey(cacheKey);
                 }
-                fieldInfo.setCacheKey(cacheKey);
+//                fieldInfo.setCacheKey(cacheKey);
                 fieldList.add(fieldInfo);
             }
             mergeInfo.setFieldList(fieldList);
