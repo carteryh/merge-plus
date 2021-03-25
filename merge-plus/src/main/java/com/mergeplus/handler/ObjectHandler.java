@@ -12,10 +12,12 @@ import org.apache.commons.beanutils.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
@@ -38,7 +40,7 @@ import java.util.stream.Collectors;
 public class ObjectHandler extends AbstractHandler {
 
     @Autowired
-    private RedisTemplate redisTemplate;
+    private StringRedisTemplate stringRedisTemplate;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -60,13 +62,18 @@ public class ObjectHandler extends AbstractHandler {
         List<FieldInfo> merges = new ArrayList<>();
         JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(obj));
         for (FieldInfo fieldInfo: mergeInfo.getFieldList()) {
+            //don't start cache
+            if (!fieldInfo.isEnabledCache()) {
+                merges.add(fieldInfo);
+                continue;
+            }
+
             if (fieldInfo.getClientBean() != null) {
                 FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
                 String name = feignClient.name();
-                if (fieldInfo.getCacheKey() == null || Constants.BLANK.equals(fieldInfo.getCacheKey())) {
+                //cache key is empty and key is empty, setting cache key
+                if (StringUtils.isEmpty(fieldInfo.getCacheKey()) && StringUtils.isEmpty(fieldInfo.getKey())) {
                     StringBuffer sb = new StringBuffer();
-                    sb.append(name);
-                    sb.append(Constants.COLON);
                     sb.append(name);
                     sb.append(Constants.COLON);
                     sb.append(fieldInfo.getMethod().getName());
@@ -75,11 +82,13 @@ public class ObjectHandler extends AbstractHandler {
                     fieldInfo.setCacheKey(sb.toString());
                 }
             }
-            if (fieldInfo.getCacheKey() == null || fieldInfo.getCacheKey().trim().length() == 0) {
+
+            if (StringUtils.isEmpty(fieldInfo.getCacheKey())) {
                 merges.add(fieldInfo);
                 continue;
             }
-            Object value = redisTemplate.opsForValue().get(fieldInfo.getCacheKey());
+            String jsonValue = stringRedisTemplate.opsForValue().get(fieldInfo.getCacheKey());
+            Object value = JSON.parse(jsonValue);
             if (value == null || !(value instanceof Map)) {
                 merges.add(fieldInfo);
                 continue;

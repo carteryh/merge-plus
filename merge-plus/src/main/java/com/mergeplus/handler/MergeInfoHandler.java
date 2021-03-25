@@ -17,6 +17,7 @@ import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PathVariable;
 
 import java.lang.annotation.Annotation;
@@ -104,16 +105,14 @@ public class MergeInfoHandler extends AbstractHandler {
                 FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
                 if (feignClient != null) {
                     String name = feignClient.name();
-                    if (fieldInfo.getKey() != null && fieldInfo.getKey().trim().length() > 0) {
+                    if (StringUtils.isEmpty(cacheKey) && !StringUtils.isEmpty(fieldInfo.getKey())) {
                         StringBuffer sb = new StringBuffer();
-                        sb.append(name);
-                        sb.append(Constants.COLON);
                         sb.append(name);
                         sb.append(Constants.COLON);
                         sb.append(mergeField.method());
                         sb.append(Constants.COLON);
                         sb.append(fieldInfo.getKey());
-                        fieldInfo.setCacheKey(cacheKey);
+                        cacheKey = sb.toString();
                     }
                 } else {
                     String url = Constants.BLANK;
@@ -145,16 +144,15 @@ public class MergeInfoHandler extends AbstractHandler {
                         for (Annotation annotation : annotations) {
                             if (annotation instanceof PathVariable) {
                                 PathVariable pathVariable = (PathVariable) annotation;
-                                String name = pathVariable.name();
                                 url = url.replaceAll(Constants.REPLACE_BRACE_CONTENT_REGEX, fieldInfo.getKey());
                             }
                         }
                     }
 
                     fieldInfo.setUrl(url);
-                    fieldInfo.setCacheKey(cacheKey);
                 }
-//                fieldInfo.setCacheKey(cacheKey);
+                fieldInfo.setCacheKey(cacheKey);
+                fieldInfo.setEnabledCache(mergeField.enabledCache());
                 fieldList.add(fieldInfo);
             }
             mergeInfo.setFieldList(fieldList);

@@ -33,4 +33,6 @@ public class FieldInfo {
 
     private String url;
 
+    boolean enabledCache;
+
 }

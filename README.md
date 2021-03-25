@@ -27,19 +27,25 @@
 
 1、引入相应jar包
 
+2021.03.25 升级 1.0.2 新增enabledCache字段，默认是启用缓存，可配置关闭缓存，每次请求获取最新值；fix bug缓存key错误
+
+2021.03.08 升级 1.0.1
+
+2020.11.23 发布 1.0.0
+
  maven
 
 ```xml
 <dependency>
     <groupId>com.github.carteryh</groupId>
     <artifactId>merge-plus</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.2</version>
 </dependency>
 ```
  gradle
 
 ```
-compile group: 'com.github.carteryh', name: 'merge-plus', version: '1.0.0'
+compile group: 'com.github.carteryh', name: 'merge-plus', version: '1.0.2'
 ```
 
 2、若需要使用redis缓存，特别注意redis序列化
@@ -150,19 +156,37 @@ public class Business implements Serializable {
     @MergeField(key = "test", sourceKey = "value", client = StaticHttpClient.class, method = "merge", cache = "user-center:test")
     private String valueName;
 
-    //feign merge, cache非必须,但是当cache为空时，实际cache的key为StaticFeignClient的应用名拼接冒号，再拼接上注解(@MergeField)中key
+    //feign merge, cache非必须
   	// @FeignClient(name = "user-center", url = "http://localhost:9002")
 		// public interface StaticFeignClient
-  	// cache为 user-center:test(应用名拼接冒号，再拼接上key)
+  	// cache为 user-center:test(应用名拼接冒号，再拼接上key)  cache key: xxx:merge:test
     @MergeField(key = "test", sourceKey = "value", client = StaticFeignClient.class, method = "merge")
     private String valueName2;
 
-  	//feign merge, cache非必须
+  	//feign merge, cache非必须  
     @MergeField(key = "test", sourceKey = "value", client = StaticFeignClient.class, method = "merge", cache = "user-center:test")
     private String valueName3;
+  
+      /**
+     * 用户编码  admin
+     */
+    private String userCode;
+
+    /**
+     * 用户名称  比如  管理员, enabledCache默认开启缓存，设置为false每次请求获取
+     */
+    //cache key: xxx:mergeName:admin
+    @MergeField(sourceKey = "userCode", client = SysUserFeignClient.class, method = "mergeName", enabledCache = false)
+    private String userName;
 
 }
 ```
+
+enabledCache默认启用缓存，redis缓存key,当cache为空时
+
+如果key不为空，实际cache的key为FeignClient的应用名拼接冒号，拼接方法名，拼接冒号，再拼接上注解(@MergeField)中key，比如StaticFeignClient为例：applicationName:method:key，xxx:merge:test。
+
+key为空，实际cache的key为FeignClient的应用名拼接冒号，拼接方法名，拼接冒号，再拼接value值，比如SysUserFeignClient为例,假设userCode为admin：applicationName:method:value，xxx:mergeName:admin。
 
 6、merge调用
 
@@ -179,17 +203,22 @@ public class Business implements Serializable {
 
     Business business =  new Business();
     business.setValue("a");
-    business.setValue2("c");
-    business.setValue3("d");
+    business.setValue2("0");
+    business.setDicValue("d");
+    business.setUserCode("A00001");
+    business.setRegion("110107");
     objects.add(business);
 
     Business business2 =  new Business();
     business2.setValue("c");
-    business2.setValue2("b");
-    business2.setValue3("x");
+    business2.setValue2("1");
+    business2.setDicValue("x");
+    business2.setUserCode("U000001");
+    business2.setRegion("120103");
     objects.add(business2);
 
     mergeCore.mergeResult(objects);
+    System.out.println("=====*******======");
     System.out.println(objects);
   }
 ```
@@ -197,7 +226,7 @@ public class Business implements Serializable {
 7、merge结果
 
 ```java
-[Business(value=a, valueName=A, value2=c, valueName2=C, value3=d, valueName3=D), Business(value=c, valueName=C, value2=b, valueName2=B, value3=x, valueName3=null)]
+[Business(value=a, valueName=null, value2=0, valueName2=null, dicValue=d, dicValueNamme=null, userCode=A00001, userName=管理员, region=110107, regionName=石景山区)]
 ```
 
 

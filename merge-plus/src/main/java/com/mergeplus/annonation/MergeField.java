@@ -29,4 +29,6 @@ public @interface MergeField {
 
     String cache() default "";
 
+    boolean enabledCache() default true;
+
 }
