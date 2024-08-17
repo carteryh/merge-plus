@@ -8,7 +8,7 @@ import java.lang.annotation.Target;
 /**
  * 项目名称：merge-plus
  * 类 名 称：MergeResult
- * 类 描 述：TODO
+ * 类 描 述：MergeResult结果
  * 创建时间：2020/10/21 10:26 上午
  * 创 建 人：chenyouhong
  */

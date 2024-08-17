@@ -2,14 +2,12 @@ package com.mergeplus.request;
 
 import com.mergeplus.annonation.GetMerge;
 import com.mergeplus.annonation.HttpMerge;
-import com.mergeplus.constant.Constants;
 import com.mergeplus.entity.FieldInfo;
+import jakarta.annotation.PostConstruct;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.GetMapping;
 
-import javax.annotation.PostConstruct;
 
 /**
  * 项目名称：merge-plus
@@ -21,16 +19,28 @@ import javax.annotation.PostConstruct;
 @Component
 public class GetMergeRequest extends AbstractRequest {
 
+    /**
+     *
+     */
     @PostConstruct
     public void init() {
         this.requestMap.put(this.getType(), new GetMergeRequest());
     }
 
+    /**
+     *
+     * @return 返回
+     */
     @Override
     public HttpMethod getType() {
         return HttpMethod.GET;
     }
 
+    /**
+     *
+     * @param fieldInfo 参数
+     * @return 返回
+     */
     @Override
     public String parseRquest(FieldInfo fieldInfo) {
         HttpMerge httpMerge = fieldInfo.getClientBeanClazz().getAnnotation(HttpMerge.class);

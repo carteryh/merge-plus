@@ -1,4 +1,4 @@
-//package com.mergeplus.aspect;
+package com.mergeplus.aspect;//package com.mergeplus.aspect;
 //
 //import org.aopalliance.intercept.MethodInterceptor;
 //import org.aopalliance.intercept.MethodInvocation;

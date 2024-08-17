@@ -1,12 +1,14 @@
+import org.springframework.boot.gradle.plugin.SpringBootPlugin
+
 buildscript {
     ext {
-        set('springBootVersion', "2.3.4.RELEASE")
-        set('springCloudVersion', "Hoxton.SR8")
+        set('springBootVersion', "3.3.1")
+        set('springCloudVersion', "2023.0.1")
     }
 
     repositories {
         mavenLocal()
-        maven { url "http://maven.aliyun.com/nexus/content/groups/public/" }
+        maven { url "https://maven.aliyun.com/nexus/content/groups/public/" }
         maven { url "https://oss.sonatype.org/content/groups/public/" }
         maven { url "https://repo.spring.io/libs-milestone/" }
         jcenter()
@@ -15,116 +17,113 @@ buildscript {
     dependencies {
         classpath("org.springframework.boot:spring-boot-gradle-plugin:${springBootVersion}")
     }
+
 }
+
 
 plugins {
-    id 'org.springframework.boot' version '2.3.4.RELEASE'
-    id 'io.spring.dependency-management' version '1.0.10.RELEASE'
-}
-
-apply plugin: 'java'
-apply plugin: 'idea'
-apply plugin: 'eclipse'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'signing'
-apply plugin: 'org.springframework.boot'
-apply plugin: 'io.spring.dependency-management'
-
-dependencyManagement {
-    imports {
-        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
-        mavenBom  org.springframework.boot.gradle.plugin.SpringBootPlugin.BOM_COORDINATES
-    }
+    id 'org.springframework.boot' version '3.3.0'  // Replace with the latest Spring Boot 3 version
+    id 'io.spring.dependency-management' version '1.1.0'
+    id 'java'
+    id 'java-library'
+    id 'maven-publish'
+//    id 'signing'
 }
 
 group 'com.github.carteryh'
 archivesBaseName="merge-plus"
-version '1.0.2'
+version '1.1.0'
 
-sourceCompatibility = '8'
+
+java {
+    sourceCompatibility = '17'
+    targetCompatibility = '17'
+
+    withJavadocJar()
+    withSourcesJar()
+}
+
+jar {
+    // 检查这里是否有类似 archiveClassifier.set('plain') 的配置
+    // 或者在归档名称中直接添加了 '-plain'
+//    archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.jar") // 可以显式设置文件名
+    archiveClassifier.set('') // 确保分类器为空字符串
+}
 
 repositories {
     mavenLocal() // 使用本地仓库
     mavenCentral()
 }
 
-task sourcesJar(type: Jar) {
-    from sourceSets.main.allJava
-    classifier = 'sources'
-}
-
-task javadocJar(type: Jar) {
-    from javadoc
-    classifier = 'javadoc'
-}
-
-// 指定上传的路径
-def localMavenRepo = 'file://' + new File(System.getProperty('user.home'), '.m2/repository').absolutePath
-
-// 上传Task，Gradle会生成并上传pom.xml文件。
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            repository(url: localMavenRepo)
-
-            //构造项目的Pom文件
-            pom.project {
-                name = project.name
-                packaging = 'jar'
-                description = 'merge-plus'
-            }
-        }
-
+dependencyManagement {
+    imports {
+        mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+        mavenBom  SpringBootPlugin.BOM_COORDINATES
     }
 }
 
 dependencies {
-    compileOnly 'org.springframework.boot:spring-boot-starter'
-    compileOnly 'com.alibaba:fastjson:1.2.73'
+    implementation 'org.projectlombok:lombok:1.18.24'
+    annotationProcessor 'org.projectlombok:lombok:1.18.24'
 
-    compile 'org.springframework.boot:spring-boot-starter-aop'
-    compile 'org.projectlombok:lombok:1.18.12'
-    compileOnly 'org.springframework.boot:spring-boot-starter-web'
-    compileOnly group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
-    compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+    implementation 'org.springframework.boot:spring-boot-starter'
+    implementation 'com.alibaba.fastjson2:fastjson2:2.0.51'
 
-    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
-    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+    implementation 'org.springframework.boot:spring-boot-starter-aop'
+//    compile 'org.projectlombok:lombok:1.18.12'
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.cloud:spring-cloud-starter-openfeign'
+    implementation 'org.springframework.boot:spring-boot-starter-data-redis'
 
-    compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
-    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
+//    implementation group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+//    implementation group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
 
-    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+    implementation 'com.google.guava:guava:33.2.1-jre'
+    implementation 'commons-beanutils:commons-beanutils:1.9.4'
 
-    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+    implementation 'org.springframework.boot:spring-boot-starter-test'
+
+    implementation('org.springframework.boot:spring-boot-starter-test') {
         exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
     }
+
+//    compileOnly 'org.springframework.boot:spring-boot-starter'
+//    compileOnly 'com.alibaba.fastjson2:fastjson2:2.0.51'
+//
+//    compile 'org.springframework.boot:spring-boot-starter-aop'
+////    compile 'org.projectlombok:lombok:1.18.12'
+//    compileOnly 'org.springframework.boot:spring-boot-starter-web'
+//    compileOnly group: 'org.springframework.cloud', name: 'spring-cloud-starter-openfeign'
+//    compileOnly group: 'org.springframework.boot', name: 'spring-boot-starter-data-redis'
+//
+//    compileOnly group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+//    annotationProcessor group: 'org.projectlombok', name: 'lombok', version: '1.18.16'
+//
+//    compile group: 'com.google.guava', name: 'guava', version: '30.0-jre'
+//    compile group: 'commons-beanutils', name: 'commons-beanutils', version: '1.9.4'
+//
+//    testCompile group: 'org.springframework.boot', name: 'spring-boot-starter-test'
+//
+//    testImplementation('org.springframework.boot:spring-boot-starter-test') {
+//        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+//    }
 }
 
-test {
-    useJUnitPlatform()
-}
-
-jar {
-    enabled = true
-}
-
-bootJar {
-    enabled = false
-}
 
 publishing {
-    // 定义发布什么
     publications {
         mavenJava(MavenPublication) {
-            // groupId = project.group
-            // artifactId = project.name
-            // version = project.version
-            // groupId,artifactId,version，如果不定义，则会按照以上默认值执行
             from components.java
-            artifact sourcesJar
-            artifact javadocJar
+            artifactId = 'merge-plus'
+            versionMapping {
+                usage('java-api') {
+                    fromResolutionOf('runtimeClasspath')
+                }
+                usage('java-runtime') {
+                    fromResolutionResult()
+                }
+            }
+
             pom {
                 // 构件名称
                 // 区别于artifactId，可以理解为artifactName
@@ -149,33 +148,30 @@ publishing {
                 }
                 // 版本控制仓库地址
                 scm {
-                    url = 'https://github.com/13162576590/merge-plus'
+                    url = 'https://github.com/carteryh/merge-plus'
                     connection = 'scm:git:git://github.com/13162576590/merge-plus.git'
                     developerConnection = 'scm:git:ssh://git@github.com:13162576590/merge-plus.git'
                 }
             }
         }
     }
-    // 定义发布到哪里
     repositories {
         maven {
-            url "https://oss.sonatype.org/service/local/staging/deploy/maven2"
-            credentials {
-                // 这里就是之前在issues.sonatype.org注册的账号
-                username='xxx'
-                password='xxx'
-            }
+            // change URLs to point to your repos, e.g. http://my.org/repo
+            def releasesRepoUrl = layout.buildDirectory.dir('repos/releases')
+            def snapshotsRepoUrl = layout.buildDirectory.dir('repos/snapshots')
+            url = version.endsWith('SNAPSHOT') ? snapshotsRepoUrl : releasesRepoUrl
         }
     }
 }
 
-signing {
-    sign publishing.publications.mavenJava
-}
+//signing {
+//    sign publishing.publications.mavenJava
+//}
 
 
 javadoc {
-    // <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    // 防止本地打开中文乱码
-    options.addStringOption("charset", "UTF-8")
+    if(JavaVersion.current().isJava9Compatible()) {
+        options.addBooleanOption('html5', true)
+    }
 }

@@ -9,16 +9,39 @@ package com.mergeplus.constant;
  */
 public interface Constants {
 
+    /**
+     *
+     */
     String LEFT_BRACE = "{";
 
+    /**
+     *
+     */
     String RIGHT_BRACE = "}";
 
+    /**
+     *
+     */
     String COLON = ":";
 
+    /**
+     * redis分隔文件夹
+     */
+    String DOUBLE_COLON = "::";
+
+    /**
+     *
+     */
     String BLANK = "";
 
+    /**
+     *
+     */
     String REPLACE_BRACE_CONTENT_REGEX = "\\{.*\\}";
 
+    /**
+     *
+     */
     String AUTO_LOAD_CACHE_KEY = "cacheObject";
 
 }

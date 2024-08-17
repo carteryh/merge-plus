@@ -24,13 +24,26 @@ public class MergeAspect {
     @Autowired
     private MergeCore mergeCore;
 
+    /**
+     *
+     */
     public MergeAspect() {
     }
 
+    /**
+     *
+     */
     @Pointcut("@annotation(com.mergeplus.annonation.Merge)")
     public void methodPointcut() {
     }
 
+    /**
+     *
+     * @param pjp 参数
+     * @param obj 参数
+     * @return    返回
+     * @throws Throwable 异常
+     */
     @Around("methodPointcut()&&args(obj)")
     public Object interceptor(ProceedingJoinPoint pjp, Object obj) throws Throwable {
         mergeCore.mergeData(obj);

@@ -10,6 +10,9 @@ package com.mergeplus.utils;
 public class RegexValidUtils {
 
     //替换大括号及大括号中的内容
+    /**
+     *
+     */
     public static final String REPLACE_BRACE_AND_CONTENT = "\\{.*\\}";
 
 

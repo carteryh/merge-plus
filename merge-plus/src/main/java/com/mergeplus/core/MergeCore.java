@@ -1,22 +1,13 @@
 package com.mergeplus.core;
 
 import com.mergeplus.annonation.Merge;
-import com.mergeplus.annonation.MergeField;
-import com.mergeplus.cache.Cache;
-import com.mergeplus.cache.MergeCacheManager;
-import com.mergeplus.entity.FieldInfo;
-import com.mergeplus.entity.MergeInfo;
 import com.mergeplus.handler.*;
+import jakarta.annotation.PostConstruct;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationContext;
+import org.springframework.stereotype.Component;
 import org.springframework.util.Assert;
-
-import javax.annotation.PostConstruct;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * 项目名称：merge-plus
@@ -26,6 +17,7 @@ import java.util.List;
  * 创 建 人：chenyouhong
  */
 @Slf4j
+@Component
 public class MergeCore {
 //    AbstractHandler build = new AbstractHandler.Builder()
 //            .addHandle(new ValidateHandler())
@@ -38,6 +30,9 @@ public class MergeCore {
     @Autowired
     private ApplicationContext applicationContext;
 
+    /**
+     * 初始化责任链
+     */
     @PostConstruct
     public void init() {
         build = new AbstractHandler.Builder()
@@ -48,12 +43,19 @@ public class MergeCore {
                 .build();
     }
 
+    /**
+     *
+     * @param object 合并参数
+     */
     @Merge
     public void mergeResult(Object object) {
 
     }
 
-
+    /**
+     *
+     * @param object 合并参数
+     */
     public void mergeData(Object object) {
         if (build == null) {
             Assert.notNull(object, "error: build must not be null");

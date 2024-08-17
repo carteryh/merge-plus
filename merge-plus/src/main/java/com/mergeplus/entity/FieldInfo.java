@@ -1,7 +1,7 @@
 package com.mergeplus.entity;
 
+import feign.Request;
 import lombok.Data;
-import org.springframework.http.HttpMethod;
 
 import java.lang.reflect.Method;
 
@@ -21,7 +21,7 @@ public class FieldInfo {
 
     private Method method;
 
-    private HttpMethod httpMethod;
+    private Request.HttpMethod httpMethod;
 
     private String key;
 
@@ -33,6 +33,172 @@ public class FieldInfo {
 
     private String url;
 
+    private String sourcePath;
+
+    private String targetPath;
+
     boolean enabledCache;
+
+    boolean paramRedisKeyEnabled;
+
+    /**
+     *
+     * @return 返回
+     */
+    public Class<? extends Object> getClientBeanClazz() {
+        return clientBeanClazz;
+    }
+
+    /**
+     *
+     * @param clientBeanClazz 参数
+     */
+    public void setClientBeanClazz(Class<? extends Object> clientBeanClazz) {
+        this.clientBeanClazz = clientBeanClazz;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public Object getClientBean() {
+        return clientBean;
+    }
+
+    /**
+     *
+     * @param clientBean 参数
+     */
+    public void setClientBean(Object clientBean) {
+        this.clientBean = clientBean;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public Method getMethod() {
+        return method;
+    }
+
+    /**
+     *
+     * @param method 参数
+     */
+    public void setMethod(Method method) {
+        this.method = method;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public Request.HttpMethod getHttpMethod() {
+        return httpMethod;
+    }
+
+    /**
+     *
+     * @param httpMethod 参数
+     */
+    public void setHttpMethod(Request.HttpMethod httpMethod) {
+        this.httpMethod = httpMethod;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public String getKey() {
+        return key;
+    }
+
+    /**
+     *
+     * @param key 参数
+     */
+    public void setKey(String key) {
+        this.key = key;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public String getSourceKey() {
+        return sourceKey;
+    }
+
+    /**
+     *
+     * @param sourceKey 参数
+     */
+    public void setSourceKey(String sourceKey) {
+        this.sourceKey = sourceKey;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public String getTargetKey() {
+        return targetKey;
+    }
+
+    /**
+     *
+     * @param targetKey 参数
+     */
+    public void setTargetKey(String targetKey) {
+        this.targetKey = targetKey;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public String getCacheKey() {
+        return cacheKey;
+    }
+
+    /**
+     *
+     * @param cacheKey 参数
+     */
+    public void setCacheKey(String cacheKey) {
+        this.cacheKey = cacheKey;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public String getUrl() {
+        return url;
+    }
+
+    /**
+     *
+     * @param url 参数
+     */
+    public void setUrl(String url) {
+        this.url = url;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public boolean isEnabledCache() {
+        return enabledCache;
+    }
+
+    /**
+     *
+     * @param enabledCache 参数
+     */
+    public void setEnabledCache(boolean enabledCache) {
+        this.enabledCache = enabledCache;
+    }
 
 }

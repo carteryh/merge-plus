@@ -1,32 +1,28 @@
 package com.mergeplus.handler;
 
-import com.alibaba.fastjson.JSON;
-import com.alibaba.fastjson.JSONObject;
+import com.alibaba.fastjson2.JSONPath;
+import com.alibaba.fastjson2.JSON;
+import com.alibaba.fastjson2.JSONArray;
+import com.alibaba.fastjson2.JSONObject;
 import com.mergeplus.cache.Cache;
 import com.mergeplus.cache.MergeCacheManager;
 import com.mergeplus.constant.Constants;
 import com.mergeplus.entity.FieldInfo;
 import com.mergeplus.entity.MergeInfo;
+import jakarta.annotation.Resource;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.beanutils.BeanUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.openfeign.FeignClient;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.StringRedisTemplate;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.MediaType;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.*;
+import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.lang.reflect.Field;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 /**
@@ -37,28 +33,30 @@ import java.util.stream.Collectors;
  * 创 建 人：chenyouhong
  */
 @Slf4j
+@Component
 public class ObjectHandler extends AbstractHandler {
 
-    @Autowired
+    @Resource
     private StringRedisTemplate stringRedisTemplate;
 
-    @Autowired
-    private RestTemplate restTemplate;
+//    @Resource
+//    private RedisTemplate redisTemplate;
 
-    private static final ExecutorService executor = Executors.newCachedThreadPool();
+    @Resource
+    private RestTemplate restTemplate;
 
     @Override
     public void doHandler(Object obj) {
         Class<?> clazz = obj.getClass();
-        String className = clazz.getName();
         Cache cache = MergeCacheManager.getInstance();
-        MergeInfo mergeInfo = (MergeInfo)cache.get(className);
+        MergeInfo mergeInfo = (MergeInfo)cache.get(clazz);
 
         if (mergeInfo == null) {
             return;
         }
 
-        Map<Object, Object> result = new HashMap<>();
+        String json = JSON.toJSONString(obj);
+        JSONObject result = new JSONObject();
         List<FieldInfo> merges = new ArrayList<>();
         JSONObject jsonObject = JSON.parseObject(JSON.toJSONString(obj));
         for (FieldInfo fieldInfo: mergeInfo.getFieldList()) {
@@ -68,66 +66,127 @@ public class ObjectHandler extends AbstractHandler {
                 continue;
             }
 
+//            if (!StringUtils.hasText(fieldInfo.getCacheKey())) {
+//                merges.add(fieldInfo);
+//                continue;
+//            }
+
             if (fieldInfo.getClientBean() != null) {
                 FeignClient feignClient = fieldInfo.getClientBeanClazz().getAnnotation(FeignClient.class);
                 String name = feignClient.name();
                 //cache key is empty and key is empty, setting cache key
-                if (StringUtils.isEmpty(fieldInfo.getCacheKey()) && StringUtils.isEmpty(fieldInfo.getKey())) {
-                    StringBuffer sb = new StringBuffer();
-                    sb.append(name);
-                    sb.append(Constants.COLON);
-                    sb.append(fieldInfo.getMethod().getName());
-                    sb.append(Constants.COLON);
-                    sb.append(jsonObject.get(fieldInfo.getSourceKey()));
-                    fieldInfo.setCacheKey(sb.toString());
+                if (!StringUtils.hasText(fieldInfo.getCacheKey())) {
+                    String sb = fieldInfo.getMethod().getName();
+//                    String sb = name +
+//                            Constants.COLON +
+//                            fieldInfo.getMethod().getName() +
+//                            Constants.COLON +
+//                            jsonObject.get(fieldInfo.getSourceKey());
+                    fieldInfo.setCacheKey(sb);
                 }
             }
 
-            if (StringUtils.isEmpty(fieldInfo.getCacheKey())) {
-                merges.add(fieldInfo);
-                continue;
+            String redisKey = fieldInfo.getCacheKey();
+
+            String sourceKey = (String)JSONPath.eval(json, fieldInfo.getSourcePath());
+            if (fieldInfo.isParamRedisKeyEnabled()) {
+                if (!StringUtils.hasText(sourceKey)) {
+                    continue;
+                }
+                redisKey = redisKey + Constants.DOUBLE_COLON + sourceKey;
             }
-            String jsonValue = stringRedisTemplate.opsForValue().get(fieldInfo.getCacheKey());
+
+            String jsonValue = stringRedisTemplate.opsForValue().get(redisKey);
             Object value = JSON.parse(jsonValue);
-            if (value == null || !(value instanceof Map)) {
+            if (value == null || !(value instanceof JSONArray)) {
                 merges.add(fieldInfo);
                 continue;
             }
 
             //cacheObject
-            Map map = (Map) value;
-            Object o = null;
-            if (map.containsKey(Constants.AUTO_LOAD_CACHE_KEY)) {
-                o = map.get(Constants.AUTO_LOAD_CACHE_KEY);
-            }
+            if (value instanceof JSONArray) {
+                JSONArray jsonArray = (JSONArray) value;
+                if (jsonArray.size() <= 1) {
+                    merges.add(fieldInfo);
+                    continue;
+                }
 
-            if (o != null && o instanceof Map) {
-                map = (Map)o;
-            }
+                Object v = jsonArray.getJSONObject(1).get(sourceKey);
+                if (v == null) {
+                    merges.add(fieldInfo);
+                    continue;
+                }
+                JSONPath.set(obj, fieldInfo.getTargetPath(), v);
+            } else if(value instanceof Map) {
+                Map map = (Map) value;
 
-            Object v = map.get(jsonObject.get(fieldInfo.getSourceKey()));
-            if (v == null) {
-                merges.add(fieldInfo);
-                continue;
+                Object v = map.get(sourceKey);
+                if (v == null) {
+                    merges.add(fieldInfo);
+                    continue;
+                }
+                JSONPath.set(obj, fieldInfo.getTargetPath(), v);
             }
-            result.put(fieldInfo.getTargetKey(), v);
         }
 
+        // 设置子线程共享
+        final RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+
         merges.stream().map(e -> CompletableFuture.supplyAsync(() -> {
-            Map<Object, Object> returnMap = null;
+            JSONObject returnMap = null;
             try {
-                if (e.getClientBean() != null) {
-                    Object returnValue = e.getMethod().invoke(e.getClientBean(), jsonObject.get(e.getSourceKey()));
-                    returnMap = (Map) returnValue;
-                    if (returnValue != null && returnValue instanceof Map) {
-                        returnMap = (Map) returnValue;
+                // 设置当前线程的 RequestAttributes
+                RequestContextHolder.setRequestAttributes(attributes);
+
+                String sourceValue = (String)JSONPath.eval(json, e.getSourcePath());
+                if (!StringUtils.hasText(sourceValue)) {
+                    return e;
+                }
+
+                // 在取一次缓存
+                String redisKey = e.getCacheKey();
+                if (e.isParamRedisKeyEnabled()) {
+                    if (!StringUtils.hasText(sourceValue)) {
+                        return e;
                     }
+                    redisKey = redisKey + Constants.DOUBLE_COLON + sourceValue;
+                }
+
+                String jsonValue = stringRedisTemplate.opsForValue().get(redisKey);
+                Object value = JSON.parse(jsonValue);
+                if (value != null) {
+                    //cacheObject
+                    if (value instanceof JSONArray) {
+                        JSONArray jsonArray = (JSONArray) value;
+                        if (jsonArray.size() > 1) {
+                            Object v = jsonArray.getJSONObject(1).get(sourceValue);
+                            if (v != null) {
+                                JSONPath.set(obj, e.getTargetPath(), v);
+                                return e;
+                            }
+                        }
+                    } else if(value instanceof Map) {
+                        Map map = (Map) value;
+
+                        Object v = map.get(sourceValue);
+                        if (v != null) {
+                            JSONPath.set(obj, e.getTargetPath(), v);
+                            return e;
+                        }
+                    }
+                }
+
+                if (e.getClientBean() != null) {
+                    Object returnValue = e.getMethod().invoke(e.getClientBean(), sourceValue);
+                    if (returnValue == null) {
+                        return e;
+                    }
+                    returnMap = JSON.parseObject(JSON.toJSONString(returnValue));
 
                     if (returnMap == null || returnMap.isEmpty()) {
                         return e;
                     }
-
-                    result.put(e.getTargetKey(), returnMap.get(jsonObject.get(e.getSourceKey())));
+                    JSONPath.set(obj, e.getTargetPath(), returnMap.get(sourceValue));
                 } else {
                     if (e.getUrl() == null || e.getUrl().trim().length() == 0) {
                         return e;
@@ -139,13 +198,19 @@ public class ObjectHandler extends AbstractHandler {
 
                     //设置访问参数
                     HashMap<String, Object> params = new HashMap<>();
-                    if (e.getKey() == null || e.getKey().trim().length() == 0) {
-                        params.put(e.getSourceKey(), jsonObject.get(e.getSourceKey()));
+//                    if (e.getKey() == null || e.getKey().trim().length() == 0) {
+//                        params.put(e.getSourceKey(), sourceValue);
+//                    }
+
+                    if (e.isParamRedisKeyEnabled()) {
+                        params.put(e.getSourceKey(), sourceValue);
                     }
+
                     //设置访问的Entity
                     HttpEntity entity = new HttpEntity<>(params, headers);
 
-                    ResponseEntity<Object> exchange = restTemplate.exchange(e.getUrl(), e.getHttpMethod(), entity, Object.class);
+                    // todo
+                    ResponseEntity<Object> exchange = restTemplate.exchange(e.getUrl(), HttpMethod.GET, entity, Object.class);
                     if (exchange == null) {
                         return e;
                     }
@@ -155,28 +220,43 @@ public class ObjectHandler extends AbstractHandler {
                         return e;
                     }
 
-                    if (body instanceof Map) {
-                        returnMap = (Map) body;
-                        if (returnMap == null || returnMap.isEmpty()) {
-                            return e;
-                        }
-                        result.put(e.getTargetKey(), returnMap.get(jsonObject.get(e.getSourceKey())));
+                    returnMap = JSON.parseObject(JSON.toJSONString(body));
+                    if (returnMap == null || returnMap.isEmpty()) {
+                        return e;
                     }
+
+                    JSONPath.set(obj, e.getTargetPath(), returnMap.get(sourceValue));
                 }
             } catch (Exception ex) {
                 log.error("class: {}, methodName={}, error: {}", e.getClientBeanClazz(), e.getMethod().getName(), ex);
+            } finally {
+                RequestContextHolder.resetRequestAttributes(); // 记得在最后重置请求属性
             }
             return e;
-        }, executor)).collect(Collectors.toList()).stream().map(CompletableFuture::join).collect(Collectors.toList());
+        }, executor)).toList().stream().map(CompletableFuture::join).collect(Collectors.toList());
+    }
 
-        if (result == null || result.isEmpty()) {
-            return;
-        }
-
+    /**
+     * 反射set
+     * @param targetObject  目标对象
+     * @param propertyName  属性名称
+     * @param propertyValue 属性值
+     */
+    public static void setProperty(Object targetObject, String propertyName, Object propertyValue) {
         try {
-            BeanUtils.copyProperties(obj, result);
+            // 获取目标对象的 Class 对象
+            Class<?> clazz = targetObject.getClass();
+
+            // 获取要设置的字段 Field 对象
+            Field field = clazz.getDeclaredField(propertyName);
+
+            // 设置私有字段可以访问
+            field.setAccessible(true);
+
+            // 设置字段的值
+            field.set(targetObject, propertyValue);
         } catch (Exception e) {
-            log.error("copyProperties error: {}",  e);
+            log.error("setProperty error: {}",  e);
         }
     }
 

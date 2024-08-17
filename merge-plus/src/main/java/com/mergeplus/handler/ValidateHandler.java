@@ -1,7 +1,5 @@
 package com.mergeplus.handler;
 
-import org.springframework.stereotype.Component;
-
 import java.util.Collection;
 
 /**
@@ -13,6 +11,10 @@ import java.util.Collection;
  */
 public class ValidateHandler extends AbstractHandler {
 
+    /**
+     *
+     * @param obj 参数
+     */
     @Override
     public void doHandler(Object obj) {
         if (obj == null) {

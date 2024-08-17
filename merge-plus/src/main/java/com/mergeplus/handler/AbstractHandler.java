@@ -1,5 +1,8 @@
 package com.mergeplus.handler;
 
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+
 /**
  * 项目名称：merge-plus
  * 类 名 称：Handle
@@ -9,16 +12,36 @@ package com.mergeplus.handler;
  */
 public abstract class AbstractHandler {
 
+    /**
+     * 多线程
+     */
+    protected static final ExecutorService executor = Executors.newCachedThreadPool();
+
+    /**
+     *
+     */
     protected AbstractHandler next;
 
+    /**
+     * 参数
+     * @param obj 参数
+     */
     public abstract void doHandler(Object obj);
 
+    /**
+     *
+     */
     public static class Builder {
 
         private AbstractHandler head;
 
         private AbstractHandler tail;
 
+        /**
+         * 参数
+         * @param abstractHandler 参数
+         * @return 返回
+         */
         public Builder addHandle(AbstractHandler abstractHandler) {
             if (this.head == null) {
                 this.head = this.tail = abstractHandler;
@@ -28,6 +51,10 @@ public abstract class AbstractHandler {
             return this;
         }
 
+        /**
+         *
+         * @return 返回
+         */
         public AbstractHandler build() {
             return this.head;
         }

@@ -1,25 +1,11 @@
 package com.mergeplus.request;
 
-import com.mergeplus.annonation.GetMerge;
-import com.mergeplus.annonation.MergeField;
-import com.mergeplus.annonation.RequestMergeMapping;
-import com.mergeplus.constant.Constants;
 import com.mergeplus.entity.FieldInfo;
-import com.mergeplus.entity.MergeInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.context.ApplicationContext;
 import org.springframework.http.HttpMethod;
-import org.springframework.util.Assert;
-import org.springframework.web.bind.annotation.PathVariable;
 
-import java.lang.annotation.Annotation;
-import java.lang.reflect.Field;
-import java.lang.reflect.Method;
-import java.lang.reflect.Type;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -36,10 +22,22 @@ public abstract class AbstractRequest {
     @Autowired
     private ApplicationContext applicationContext;
 
+    /**
+     *
+     */
     public static Map<HttpMethod, AbstractRequest> requestMap = new ConcurrentHashMap<>();
 
+    /**
+     *
+     * @return 返回
+     */
     abstract public HttpMethod getType();
 
+    /**
+     *
+     * @param fieldInfo 参数
+     * @return 返回
+     */
     abstract public String parseRquest(FieldInfo fieldInfo);
 
 //    public void doHttpMerge(Class<?> clazz) {

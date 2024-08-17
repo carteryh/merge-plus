@@ -2,7 +2,7 @@ package com.mergeplus.entity;
 
 import lombok.Data;
 
-import java.lang.reflect.Method;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -24,6 +24,37 @@ public class MergeInfo {
     /**
      * 表字段信息列表
      */
-    private List<FieldInfo> fieldList;
+    private List<FieldInfo> fieldList = new ArrayList<>();
 
+    /**
+     *
+     * @return 返回
+     */
+    public String getClassName() {
+        return className;
+    }
+
+    /**
+     *
+     * @param className className
+     */
+    public void setClassName(String className) {
+        this.className = className;
+    }
+
+    /**
+     *
+     * @return 返回
+     */
+    public List<FieldInfo> getFieldList() {
+        return fieldList;
+    }
+
+    /**
+     *
+     * @param fieldList fieldList
+     */
+    public void setFieldList(List<FieldInfo> fieldList) {
+        this.fieldList = fieldList;
+    }
 }

@@ -4,7 +4,6 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import java.lang.reflect.Method;
 
 /**
  * 项目名称：merge-plus
@@ -17,18 +16,52 @@ import java.lang.reflect.Method;
 @Target({ElementType.METHOD, ElementType.TYPE, ElementType.FIELD})
 public @interface MergeField {
 
+    /**
+     *
+     * @return key
+     */
     String key() default "";
 
+    /**
+     *
+     * @return client
+     */
     Class<? extends Object> client() default Object.class;
 
+    /**
+     *
+     * @return 数据源
+     */
     String sourceKey() default "";
 
+    /**
+     *
+     * @return 反射调用方法
+     */
     String method() default "";
 
+    /**
+     *
+     * @return 是否合并
+     */
     boolean isMerge() default false;
 
+    /**
+     *
+     * @return 缓存
+     */
     String cache() default "";
 
+    /**
+     *
+     * @return 是否启用缓存
+     */
     boolean enabledCache() default true;
+
+    /**
+     *
+     * @return 是否启用参数作为缓存key
+     */
+    boolean paramRedisKeyEnabled() default true;
 
 }
