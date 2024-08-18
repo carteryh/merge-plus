@@ -44,6 +44,7 @@ java {
 }
 
 jar {
+    bootJar.enabled = false
     // 检查这里是否有类似 archiveClassifier.set('plain') 的配置
     // 或者在归档名称中直接添加了 '-plain'
 //    archiveFileName.set("${archiveBaseName.get()}-${archiveVersion.get()}.jar") // 可以显式设置文件名
