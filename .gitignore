@@ -36,8 +36,8 @@ merge-plus/gradle
 merge-plus/build-test.gradle
 
 .idea
-.gradle
-gradle
+# .gradle
+# gradle
 build
 target
 build-test.gradle
