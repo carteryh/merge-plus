@@ -34,3 +34,14 @@ merge-plus/.gradle
 merge-plus/build
 merge-plus/gradle
 merge-plus/build-test.gradle
+
+.idea
+.gradle
+gradle
+build
+target
+build-test.gradle
+
+*.iws
+*.iml
+*.ipr

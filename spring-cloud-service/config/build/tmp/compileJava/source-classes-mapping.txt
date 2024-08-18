@@ -1,4 +1,0 @@
-com/cloud/Config2Application.java
- com.cloud.Config2Application
-com/cloud/ConfigController.java
- com.cloud.ConfigController

@@ -1,8 +1,0 @@
-com/cloud/user/StaticFeignClient.java
- com.cloud.user.StaticFeignClient
-com/cloud/user/TestClass.java
- com.cloud.user.TestClass
-com/cloud/user/Business.java
- com.cloud.user.Business
-com/cloud/user/StaticHttpClient.java
- com.cloud.user.StaticHttpClient

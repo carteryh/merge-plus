@@ -1,5 +1,0 @@
-include 'oauth-center'
-include 'user-center'
-include 'common'
-include 'config'
-
